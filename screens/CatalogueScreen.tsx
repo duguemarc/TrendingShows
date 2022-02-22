@@ -1,21 +1,26 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react';
-import {Modal, ScrollView, TouchableOpacity, Image, View, Text, ImageStyle } from 'react-native';
+import {ScrollView, TouchableOpacity, Image, View, Text, ImageStyle, Pressable } from 'react-native';
 
 import PosterElement from '../components/PosterElement';
 import { dataShowType, mediaType, videoResultType } from '../constants/Types';
 
 import YoutubeIframe, { getYoutubeMeta, YoutubeIframeRef, YoutubeMeta } from 'react-native-youtube-iframe';
 import { Button, Icon, Spinner, StyleService, useStyleSheet, useTheme } from '@ui-kitten/components';
-import { getStatusBarHeight } from 'react-native-status-bar-height';
 import { API_KEY, configDefault, defaultMovie, rootURL } from '../constants/Constants';
+import { useScreenDimensions } from '../hooks/useScreenDimensions';
+import { getStatusBarHeight } from 'react-native-status-bar-height';
+import Modal from "react-native-modal";
 
 
 export default function CatalogueScreen() {
-
-  const STATUSBAR_HEIGHT = getStatusBarHeight()
   
   const theme = useTheme();
   const styles =  useStyleSheet(themedStyles);
+
+  const screenData = useScreenDimensions();
+
+  const STATUSBAR_HEIGHT = getStatusBarHeight();
+
   const mainContainerStyle = useStyleSheet(themedStyleMainContainer(STATUSBAR_HEIGHT));
 
   const playerRef = useRef<YoutubeIframeRef | null>(null);
@@ -25,6 +30,8 @@ export default function CatalogueScreen() {
   const [dataTrendingSeries, setDataTrendingSeries] = useState<dataShowType[]>([]);
   const [dataTrendingAll, setDataTrendingAll] = useState<dataShowType[]>([]);
 
+
+  const [play, setPlay] = useState(false);
 
   const [resquestType, setRequestType] = useState<mediaType>(mediaType.ALL);
 
@@ -54,6 +61,7 @@ export default function CatalogueScreen() {
     getTrendingSeriesFromApi();
     getTrendingAllFromApi();
   }, []);
+  
 
 
   //API CALLS
@@ -133,9 +141,9 @@ export default function CatalogueScreen() {
       }
 
       getYoutubeTrailerKey(videos.results);
-
+      setPlay(true);
      })
-     .catch((error) => {
+     .catch((error) => {0
        console.error(error);
      });
   };  
@@ -144,6 +152,11 @@ export default function CatalogueScreen() {
   const buildUrlImage = (urlPosterMovie: string) => {
     return (urlPoster+"w500"+urlPosterMovie);
   }
+
+  const buildUrlOriginalImage = (urlPosterMovie: string) => {
+    return (urlPoster+"original"+urlPosterMovie);
+  }
+
 
   const filterByType = (mType: mediaType) => {
     setRequestType(mType);
@@ -198,7 +211,6 @@ export default function CatalogueScreen() {
     getVideos(movieInfos.id, mediaType);
     setIsModalVisible(!isModalVisible);
     setIsYoutubeLoading(false);
-
   }
 
   // From api results, get a youtube video of 'Trailer' type, if doesn't find just return the first youtube video found
@@ -294,32 +306,32 @@ export default function CatalogueScreen() {
 }
 
 const BackIcon = (props:any) => (
-  <Icon name='arrow-circle-left-outline' {...props} />
+  <Icon name='arrow-back-outline' {...props} />
 );
 
   return (
-    <View style={mainContainerStyle.mainContainer}>
+    <View style={[mainContainerStyle.mainContainer, screenData.isLandscape && mainContainerStyle.mainContainerLandscape]}>
       <View style={styles.menuContainer}>
-      <TouchableOpacity style={styles.categoryContainer} onPress={()=>{filterByType(mediaType.ALL)}}>
+      <TouchableOpacity style={[styles.categoryContainer, resquestType===mediaType.ALL && styles.selected]} onPress={()=>{filterByType(mediaType.ALL)}}>
         <Icon style={styles.iconMenu} fill={theme['color-primary-500']} name='archive-outline'/>
         <Text style={styles.categoryLabel}>All</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.categoryContainer} onPress={()=>{filterByType(mediaType.MOVIE)}}>
+      <TouchableOpacity style={[styles.categoryContainer, resquestType===mediaType.MOVIE && styles.selected]} onPress={()=>{filterByType(mediaType.MOVIE)}}>
         <Icon style={styles.iconMenu} fill={theme['color-primary-500']} name='film-outline'/>
         <Text style={styles.categoryLabel}>Movies</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.categoryContainer} onPress={()=>{filterByType(mediaType.TV)}}>
+      <TouchableOpacity style={[styles.categoryContainer, resquestType===mediaType.TV && styles.selected]} onPress={()=>{filterByType(mediaType.TV)}}>
         <Icon style={styles.iconMenu} fill={theme['color-primary-500']} name='tv-outline'/>
         <Text style={styles.categoryLabel}>Series</Text>
       </TouchableOpacity>
       </View>
-      {modalMovie()}
+      {modalMovie(play)}
 
       <ScrollView contentContainerStyle={styles.scrollViewContainer} >
 
       <View style={styles.backgroundLayerContainer}>
         <View style={styles.trendingContainer}>
-        <Text style={styles.trendingTitle}>Trending</Text>
+        <Text numberOfLines={1} adjustsFontSizeToFit style={styles.trendingTitle}>Trending</Text>
         </View>
       </View>
 
@@ -332,7 +344,7 @@ const BackIcon = (props:any) => (
     </View>
   );
 
-  function modalMovie() {
+  function modalMovie(play:boolean) {
 
     const starsElement:JSX.Element[]=[];
     const nbFilledStars = Math.floor((selectedMovie.vote_average)/2);
@@ -345,34 +357,51 @@ const BackIcon = (props:any) => (
       }
     }
 
+    function closeModal() {
+      setIsModalVisible(false);
+      setPlay(false); 
+      setPlayingVideoKey('');
+    }
 
-    return <Modal visible={isModalVisible} animationType={"slide"} transparent={false} onRequestClose={() => { setIsModalVisible(false);setPlayingVideoKey(''); } }>
+
+    return <Modal useNativeDriver={true} isVisible={isModalVisible} animationIn={'zoomInDown'} animationOut={'zoomOut'} animationOutTiming={200} onBackButtonPress={() => { closeModal()}} onBackdropPress={() => { closeModal()}} >
       <View style={styles.modalMainContainer}>
-        <Button style={styles.buttonBack} accessoryLeft={BackIcon} appearance='filled' onPress={() => { setIsModalVisible(false);setPlayingVideoKey(''); } }></Button>
         <ScrollView contentContainerStyle={styles.modalScrollContainer}>
-          {isYoutubeLoading ? <Spinner style={styles.spinner} /> : <YoutubeIframe
-            ref={playerRef}
-            height={200}
-            videoId={playingVideoKey} />}
+        <View style={styles.buttonBackContainer}>
+          <Button style={styles.buttonBack} accessoryLeft={BackIcon} appearance='filled' onPress={() => { closeModal() } }></Button>
+        </View>
 
-          <Text style={styles.modalTitle}>{selectedMovie.name} {selectedMovie.title}</Text>
-          <Text style={styles.overviewText}>{selectedMovie.overview}</Text>
-          <View style={styles.ratingContainer}>
-            <Text style={styles.ratingLabel}>
-              Rating: 
-            </Text>
+          <View style={styles.mainImageContainer}>
+            <Image resizeMode='cover' source={{ uri: buildUrlOriginalImage(selectedMovie.poster_path) }} style={styles.mainPosterImage as ImageStyle} />
+            <View style={styles.modalTitleContainer}>
+              <Text style={styles.modalTitle}>{selectedMovie.name} {selectedMovie.title}</Text>
 
-            <View style={styles.voteContainer}>
-              <Text style={styles.voteCountText}>
-        
-              {selectedMovie.vote_average/2}
-              </Text>
-              <View style={styles.starsContainer}>
-              {starsElement}
+              <View style={styles.ratingContainer}>
+                <View style={styles.voteContainer}>
+                  <View style={styles.starsContainer}>
+                  {starsElement}
+                  </View>
+                  <Text style={styles.voteCountText}>
+                  {selectedMovie.vote_average/2} ({selectedMovie.vote_count} votes)
+                  </Text>
+                </View>
               </View>
 
+              <Text style={styles.overviewText}>{selectedMovie.overview}</Text>
+              
+              {(playingVideoKey === '') ? <View style={styles.spinnerContainer}>
+            <Spinner style={styles.spinner} />
+          </View>
+            : <YoutubeIframe
+            ref={playerRef}
+            height={200}
+            play={(!isYoutubeLoading && playingVideoKey != '') ? play : false}
+            videoId={playingVideoKey} />  
+            
+            
+            }
             </View>
-
+            
           </View>
 
 
@@ -408,6 +437,10 @@ const themedStyleMainContainer = (STATUSBAR_HEIGHT:number) => StyleService.creat
     justifyContent: 'flex-start',
     backgroundColor: 'color-basic-900',
     marginTop:STATUSBAR_HEIGHT
+  },
+
+  mainContainerLandscape:{
+
   }
 
 })
@@ -416,9 +449,8 @@ const themedStyles = StyleService.create({
    
   menuContainer: {
     flexDirection : 'row',
-    padding:5,
-    backgroundColor: 'color-basic-900'
-
+    backgroundColor: 'color-basic-900',
+    paddingTop:5
   },
    categoryContainer: {
     backgroundColor: 'color-basic-900',
@@ -428,12 +460,10 @@ const themedStyles = StyleService.create({
     flex:1,
     justifyContent:'center',
     alignItems:'center'
-
   },
 
   categoryLabel : {
     color: 'color-basic-100',
-    textDecorationLine: 'underline',
     fontSize: 16,
     textAlignVertical:'center'
   },
@@ -450,7 +480,7 @@ const themedStyles = StyleService.create({
   movieModalContainer: {
     backgroundColor: 'color-basic-900',
     flex:1,
-    width:'80%',
+    width:'90%',
     height:'80%'
   },
 
@@ -460,7 +490,6 @@ const themedStyles = StyleService.create({
     textAlign:'center',
     borderLeftColor: 'color-basic-500',
     borderLeftWidth: 30,
-    height:'100%',
     flex:1,
     borderTopLeftRadius: 10,
     borderTopRightRadius: 1,
@@ -500,59 +529,64 @@ const themedStyles = StyleService.create({
   modalMainContainer: {
     backgroundColor:'color-basic-900',
     flex:1,
-    color:'color-basic-100',
-    paddingHorizontal:10
+    color:'color-basic-100'
   },
 
   overviewText : {
     color:'color-basic-100',
     justifyContent:'center',
     textAlign: 'left',
-    paddingLeft:20,
-    borderLeftWidth:10,
+    paddingLeft:18,
+    borderLeftWidth:8,
     borderLeftColor:'color-primary-700',
-    marginLeft:10,
-    backgroundColor:'color-basic-900'
+    marginLeft:8,
+    marginTop:10,
+    marginBottom:25
+
   },
 
   modalTitle : {
-    color:'color-primary-300',
+    color:'color-basic-100',
     justifyContent:'center',
-    textAlign: 'right',
-    fontSize: 26,
-    paddingVertical:10,
+    textAlign: 'center',
+    fontSize: 24,
     fontWeight:'bold',
-    paddingRight:20,
-    borderRightWidth:10,
-    borderRightColor: 'color-primary-300',
-    marginBottom:15,
-    backgroundColor:'color-basic-900'
+    marginBottom:10,
+    fontStyle:'italic',
+
+  },
+
+  modalTitleContainer: {
+    position:'absolute',
+    alignSelf:'flex-end',
+    backgroundColor: 'rgba(12, 15, 24, 0.75)',
+    width:'100%',
+    paddingVertical:25
+
 
   },
 
   voteCountText : {
     color:'color-basic-100',
     justifyContent:'center',
-    textAlign: 'center'
+    textAlign: 'center',
+    paddingVertical:5
 
   },
 
   starsContainer : {
-    backgroundColor:'color-basic-900',
     flex:1,
     flexDirection:'row',
     alignSelf:'center'
   },
 
   voteContainer : {
-    backgroundColor:'color-basic-900',
     flexDirection:'column',
     flex:2
 
   },
 
   averageVoteLabel : {
-    backgroundColor:'color-basic-900',
     textAlign:'center',
     color:'color-basic-100'
 
@@ -561,7 +595,6 @@ const themedStyles = StyleService.create({
   ratingLabel : {
     color:'color-basic-100',
     justifyContent:'center',
-    backgroundColor:'color-basic-900',
     flex:1,
     textAlign: 'left',
     paddingLeft:20,
@@ -573,18 +606,26 @@ const themedStyles = StyleService.create({
   },
 
   ratingContainer : {
-    backgroundColor: 'color-basic-900',
-    paddingVertical: 20,
+    paddingVertical: 15,
     textAlignVertical:'center',
     flexDirection:'row'
   },
 
 
   buttonBack : {
-    backgroundColor: 'color-basic-900',
     width:50,
-    borderColor: 'color-basic-900'
+    borderColor: 'transparent',
+    backgroundColor: 'transparent',
+
   },
+
+  buttonBackContainer: {
+    height:50,
+    width:'100%',
+    backgroundColor: 'transparent',
+    position:'absolute',
+    zIndex: 3, // works on ios
+    },
 
   iconMenu : {
     width:20,
@@ -609,7 +650,18 @@ const themedStyles = StyleService.create({
   },
 
   spinner : {
-    justifyContent:'center'  },
+    justifyContent:'center'
+
+  },
+
+  spinnerContainer: {
+    alignSelf:'center',
+    width:'100%',
+    alignItems:'center',
+    justifyContent:'center',
+    height:200
+
+  },
     
     
   image: {
@@ -663,8 +715,40 @@ const themedStyles = StyleService.create({
     flex:1
   },
 
+  mainPosterImage:{
+    aspectRatio:11/20,
+    width:'100%',
+    height:'auto'
+  },
+
   modalScrollContainer: {
     paddingBottom:30
+  },
+
+  mainImageContainer: {
+    flex:1,
+    flexDirection:'row'
+  },
+
+  selected:{
+    backgroundColor:'color-basic-500',
+    borderTopLeftRadius: 2,
+    borderTopRightRadius: 2,
+
+    shadowColor: "color-basic-100",
+    shadowOffset: {
+      width: 3,
+      height: 1,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 2.84,
+    
+    elevation: 4,
+
+
+
+
+    
   }
 
 }

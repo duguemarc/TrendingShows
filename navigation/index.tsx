@@ -6,7 +6,7 @@ import * as React from 'react';
 import CatalogueScreen from '../screens/CatalogueScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
-export default function Navigation(props:{toggleTheme:(check:any)=>void, isChecked:boolean}) {
+export default function Navigation(props:{toggleTheme:()=>void, isChecked:boolean}) {
 
 
   return (
@@ -20,7 +20,7 @@ export default function Navigation(props:{toggleTheme:(check:any)=>void, isCheck
 
 const BottomTab = createBottomTabNavigator();
 
-function BottomTabNavigator(props:{toggleTheme:(check:any)=>void, isChecked:boolean}) {
+function BottomTabNavigator(props:{toggleTheme:()=>void, isChecked:boolean}) {
   const theme = useTheme();
   const check = props.isChecked;
   const toggle = props.toggleTheme;

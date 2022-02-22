@@ -11,8 +11,6 @@ import { StatusBar, StatusBarStyle } from 'react-native';
 import useCachedResources from './hooks/useCachedResources';
 
 
-
-
 export default function App() {
   const isLoadingComplete = useCachedResources();
 
@@ -20,23 +18,17 @@ export default function App() {
 
   const [theme, setTheme] = useState('myThemeDark');
   const [checked, setChecked] = React.useState(false);
-
   const [mode, setMode] = useState<StatusBarStyle>('light-content');
- 
 
-  const toggleTheme = (isChecked:any) => {
+  const toggleTheme = () => {
     const nextTheme = theme === 'myThemeLight' ? 'myThemeDark' : 'myThemeLight';
     const nextMode = mode === 'light-content' ? 'dark-content' : 'light-content';
     
     setTheme(nextTheme);
     setMode(nextMode);
-    
-    onCheckedChange(isChecked);
+    setChecked(!checked);
   };
 
-  const onCheckedChange = (isChecked:any) => {
-    setChecked(isChecked);
-  };
 
   if (!isLoadingComplete) { 
     return null;

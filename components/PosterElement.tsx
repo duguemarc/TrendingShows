@@ -22,15 +22,22 @@ const styles = StyleSheet.create({
       justifyContent: 'center',
       flexDirection: 'row',
       flexWrap:'wrap',
-      marginHorizontal:3,
-      marginVertical:1,
-      height: 138,
-      width:92
+      paddingVertical:4,
+      paddingHorizontal:5
+
     },
     image: {
+        borderRadius:6,
+        resizeMode:'contain',
         height:138,
         width:92,
-        borderRadius:6
-    }
+        shadowColor: "green",
+        shadowOpacity: 1,
+        shadowRadius: 3,
+        shadowOffset: {
+            width: -10,
+            height: 9,
+          }
+        }
   });
   
