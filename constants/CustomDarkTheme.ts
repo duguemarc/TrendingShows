@@ -56,5 +56,7 @@ export const myThemeDark = {
   "color-basic-600": "#14181E",
   "color-basic-700": "#0E1119",
   "color-basic-800": "#080C14",
-  "color-basic-900": "#050811"
+  "color-basic-900": "#050811",
+
+  "color-basic-500-transparent": "#050811AA"
 };

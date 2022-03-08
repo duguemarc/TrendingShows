@@ -9,6 +9,7 @@ import { myThemeDark } from './constants/CustomDarkTheme';
 import { myThemeLight } from './constants/CustomLightTheme';
 import { StatusBar, StatusBarStyle } from 'react-native';
 import useCachedResources from './hooks/useCachedResources';
+import { enableScreens } from 'react-native-screens';
 
 
 export default function App() {

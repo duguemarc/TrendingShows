@@ -1,5 +1,5 @@
 import React, { Fragment, useEffect, useRef, useState } from 'react';
-import {ScrollView, TouchableOpacity, Image, View, Text, ImageStyle, Pressable } from 'react-native';
+import {ScrollView, TouchableOpacity, Image, View, Text, ImageStyle, Pressable, ImageBackground } from 'react-native';
 
 import PosterElement from '../components/PosterElement';
 import { dataShowType, mediaType, videoResultType } from '../constants/Types';
@@ -372,8 +372,10 @@ const BackIcon = (props:any) => (
         </View>
 
           <View style={styles.mainImageContainer}>
-            <Image resizeMode='cover' source={{ uri: buildUrlOriginalImage(selectedMovie.poster_path) }} style={styles.mainPosterImage as ImageStyle} />
+          <ImageBackground imageStyle= {{opacity:0.5}} resizeMode='cover' source={{ uri: buildUrlOriginalImage(selectedMovie.poster_path) }} style={styles.mainPosterImage as ImageStyle} >
+
             <View style={styles.modalTitleContainer}>
+
               <Text style={styles.modalTitle}>{selectedMovie.name} {selectedMovie.title}</Text>
 
               <View style={styles.ratingContainer}>
@@ -388,7 +390,9 @@ const BackIcon = (props:any) => (
               </View>
 
               <Text style={styles.overviewText}>{selectedMovie.overview}</Text>
-              
+
+          <View style={styles.playerContainer}>
+
               {(playingVideoKey === '') ? <View style={styles.spinnerContainer}>
             <Spinner style={styles.spinner} />
           </View>
@@ -401,7 +405,10 @@ const BackIcon = (props:any) => (
             
             }
             </View>
-            
+
+            </View>
+            </ImageBackground>
+
           </View>
 
 
@@ -523,7 +530,9 @@ const themedStyles = StyleService.create({
   moreVideo:{
     color:'color-primary-500',
     fontSize:30,
-    paddingVertical:20
+    paddingVertical:20,
+    marginTop:30,
+    flex:1
   },
 
   modalMainContainer: {
@@ -557,10 +566,10 @@ const themedStyles = StyleService.create({
   },
 
   modalTitleContainer: {
-    position:'absolute',
     alignSelf:'flex-end',
-    backgroundColor: 'rgba(12, 15, 24, 0.75)',
+    backgroundColor: 'color-basic-500-transparent',
     width:'100%',
+    height:'100%',
     paddingVertical:25
 
 
@@ -571,18 +580,16 @@ const themedStyles = StyleService.create({
     justifyContent:'center',
     textAlign: 'center',
     paddingVertical:5
-
   },
 
   starsContainer : {
-    flex:1,
     flexDirection:'row',
     alignSelf:'center'
   },
 
   voteContainer : {
     flexDirection:'column',
-    flex:2
+    flex:1
 
   },
 
@@ -615,8 +622,7 @@ const themedStyles = StyleService.create({
   buttonBack : {
     width:50,
     borderColor: 'transparent',
-    backgroundColor: 'transparent',
-
+    backgroundColor: 'transparent'
   },
 
   buttonBackContainer: {
@@ -654,12 +660,17 @@ const themedStyles = StyleService.create({
 
   },
 
+  playerContainer : {
+    height:250,
+    width:'100%'
+
+  },
+
   spinnerContainer: {
     alignSelf:'center',
     width:'100%',
     alignItems:'center',
-    justifyContent:'center',
-    height:200
+    justifyContent:'center'
 
   },
     
@@ -716,10 +727,11 @@ const themedStyles = StyleService.create({
   },
 
   mainPosterImage:{
-    aspectRatio:11/20,
+    aspectRatio:10/20,
     width:'100%',
-    height:'auto'
-  },
+    height:'auto',
+    flexGrow:1
+    },
 
   modalScrollContainer: {
     paddingBottom:30
@@ -727,8 +739,9 @@ const themedStyles = StyleService.create({
 
   mainImageContainer: {
     flex:1,
-    flexDirection:'row'
-  },
+    flexDirection:'row',
+    paddingTop:45
+    },
 
   selected:{
     backgroundColor:'color-basic-500',

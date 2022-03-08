@@ -56,7 +56,8 @@ export const myThemeLight = {
   "color-basic-600": "#E9EEF4",
   "color-basic-700": "#F0F4F8",
   "color-basic-800": "#F4F8FB",
-  "color-basic-900": "#F9FCFD"
+  "color-basic-900": "#F9FCFD",
 
+  "color-basic-500-transparent": "#F9FCFDAA"
 
 };
